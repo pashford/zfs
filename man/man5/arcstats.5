@@ -1,0 +1,276 @@
+.\"
+.\" CDDL HEADER START
+.\"
+.\" The contents of this file are subject to the terms of the
+.\" Common Development and Distribution License (the "License").
+.\" You may not use this file except in compliance with the License.
+.\"
+.\" You can obtain a copy of the license at usr/src/OPENSOLARIS.LICENSE
+.\" or http://www.opensolaris.org/os/licensing.
+.\" See the License for the specific language governing permissions
+.\" and limitations under the License.
+.\"
+.\" When distributing Covered Code, include this CDDL HEADER in each
+.\" file and include the License file at usr/src/OPENSOLARIS.LICENSE.
+.\" If applicable, add the following below this CDDL HEADER, with the
+.\" fields enclosed by brackets "[]" replaced with your own identifying
+.\" information: Portions Copyright [yyyy] [name of copyright owner]
+.\"
+.\" CDDL HEADER END
+.\"
+.\"
+.\" Copyright (c) 2018 Peter Asford, All Rights Reserved.
+.\"
+.Dd March 9, 2018
+.Dt arcstats 5
+.Os Linux
+.Sh NAME
+.Nm arcstats
+.Nd ARC Statistics
+.Sh DESCRIPTION
+The
+.Nm
+interface is used to monitor most performance-related actions in ZFS.  All
+ZFS pools in a system contribute to the
+.Nm
+counters.
+.Pp
+The
+.Nm
+interface was originally designed and implemented to assist the ZFS
+developers.  Some of the data it provides is also useful for tuning the
+ZFS kernel parameters.  Because of the original purpose of this interface,
+a purpose it continues to meet, much of the data it provides may be of
+little or no use to most users.
+.Pp
+As the ZFS file-system continues to evolve, the contents of the
+.Nm
+interface will change.  This is necessary to support new file-system
+features as they're added.
+.Sh FILE FORMAT
+The
+.Nm
+file (
+.Pa /proc/spl/kstat/zfs/arcstats
+) is formatted as a header line followed by multiple detail lines of ASCII
+text.  Each detail line has a label, a type and a value.
+.Pp
+The description of the contents will be grouped by what they describe.
+.Sh ARC Statistics
+.Ss Global
+.Bl -tag -width Ds
+.It Sy access_skip
+Number of buffers skipped when updating the access state due to the header
+having already been released after acquiring the hash lock.
+.It Sy anon_size
+The total number of bytes in use by ARC buffers in the
+.Sq arc_anon
+state.
+.It Sy anon_evictable_data
+The number of bytes in use by ARC buffers that are in the
+.Sq arc_anon
+state, able to be evicted and contain user data.
+.It Sy anon_evictable_metadata
+The number of bytes in use by ARC buffers that are in the
+.Sq arc_anon
+state, able to be evicted and contain ZFS internal structures.
+.It Sy arc_dnode_limit
+.It Sy arc_loaned_bytes
+.It Sy arc_meta_limit
+.It Sy arc_meta_max
+.It Sy arc_meta_min
+.It Sy arc_meta_used
+.It Sy arc_need_free
+.It Sy arc_no_grow
+.It Sy arc_prune
+.It Sy arc_raw_size
+.It Sy arc_sys_free
+.It Sy arc_tempreserve
+.It Sy async_upgrade_sync
+.It Sy bonus_size
+Number of bytes in use by bonus buffers.
+.It Sy c
+This is the current size of the ARC, in bytes.
+.It Sy c_max
+The maximum size to which ZFS will allow the ARC to grow, in bytes.
+.It Sy c_min
+The minimum size to which ZFS will shrink the ARC due to memory pressure,
+in bytes.
+.It Sy compressed_size
+Number of compressed bytes stored in the arc_buf_hdr_t's b_pabd.
+.It Sy data_size
+Number of bytes in use by
+.Sq ARC_BUFC_DATA
+ARC buffers.  This type of ARC buffer is typically used by buffers storing
+disk-backed user data.
+.It Sy dbuf_size
+Number of bytes in use by
+.Sq dmu_buf_impl_t
+objects.
+.It Sy deleted
+.It Sy demand_hit_predictive_prefetch
+.It Sy demand_hit_prescient_prefetch
+.It Sy dnode_size
+number of bytes in use by
+.Sq dnode_t
+objects.
+.It Sy hdr_size
+Number of bytes in use by internal ARC structures for tracking purposes.
+.It Sy hits
+.It Sy metadata_size
+Number of bytes in use by
+.Sq ARC_BUFC_METADATA
+ARC buffers.  This type of ARC buffer is typically used by buffers storing
+disk-backed internal ZFS structures.
+.It Sy misses
+.It Sy mutex_miss
+Number of buffers that couldn't be evicted because the hash lock was held
+by another thread.
+.It Sy overhead_size
+Number of bytes stored in all the arc_buf_t's.  This is considered to be
+.Sq overhead
+because the data is typically short-lived and will be evicted from the ARC
+when it becomes unreferenced, unless the
+.Sq zfs_keep_uncompressed_metadata
+or
+.Sq zfs_keep_uncompressed_level
+parameters have been set.
+.It Sy p
+.It Sy size
+.It Sy uncompressed_size
+Uncompressed size of the data stored in b_pabd.  If compressed ARC is
+disabled, this value will be identical to the
+.Sq compressed_size
+value.
+.El
+.Ss Demand
+.Bl -tag -width Ds
+.It Sy demand_data_hits
+.It Sy demand_data_misses
+.It Sy demand_metadata_hits
+.It Sy demand_metadata_misses
+.El
+.Ss Eviction
+.Bl -tag -width Ds
+.It Sy evict_l2_cached
+.It Sy evict_l2_eligible
+.It Sy evict_l2_ineligible
+.It Sy evict_l2_skip
+.It Sy evict_not_enough
+Number of times arc_evict_state() was unable to evict enough buffers to reach
+its target amount.
+.It Sy evict_skip
+Number of buffers skipped because they have I/O in progress, are indirect
+prefetch buffers that have not lived long enough, or are not from the spa
+we're trying to evict from.
+.El
+.Ss Hash
+.Bl -tag -width Ds
+.It Sy hash_chains
+.It Sy hash_chain_max
+.It Sy hash_collisions
+.It Sy hash_elements
+.It Sy hash_elements_max
+.El
+.Ss L2ARC Statistics
+.Bl -tag -width Ds
+.It Sy l2_abort_lowmem
+.It Sy l2_asize
+.It Sy l2_cksum_bad
+.It Sy l2_evict_l1cached
+.It Sy l2_evict_lock_retry
+.It Sy l2_evict_reading
+.It Sy l2_feeds
+.It Sy l2_free_on_write
+.It Sy l2_hdr_size
+.It Sy l2_hits
+.It Sy l2_io_error
+.It Sy l2_misses
+.It Sy l2_read_bytes
+.It Sy l2_rw_clash
+.It Sy l2_size
+.It Sy l2_write_bytes
+.It Sy l2_writes_done
+.It Sy l2_writes_error
+.It Sy l2_writes_lock_retry
+.It Sy l2_writes_sent
+.El
+.Ss Memory Statistics
+.Bl -tag -width Ds
+.It Sy memory_all_bytes
+The total size of system memory in bytes.
+.It Sy memory_available_bytes
+.It Sy memory_direct_count
+.It Sy memory_free_bytes
+.It Sy memory_indirect_count
+.It Sy memory_throttle_count
+.El
+.Ss MFU (Most Frequently Used)
+.Bl -tag -width Ds
+.It Sy mfu_evictable_data
+.It Sy mfu_evictable_metadata
+.It Sy mfu_ghost_evictable_data
+.It Sy mfu_ghost_evictable_metadata
+.It Sy mfu_ghost_hits
+.It Sy mfu_ghost_size
+.It Sy mfu_hits
+.It Sy mfu_size
+.El
+.Ss MRU (Most Recently Used)
+.Bl -tag -width Ds
+.It Sy mru_evictable_data
+Total number of bytes used by
+.Sq ARC_BUFC_DATA
+ARC buffers in the
+.Sq arc_mru
+state that are eligible for eviction.  This type of ARC buffer is typically
+used by buffers storing disk-backed user data.
+.It Sy mru_evictable_metadata
+Total number of bytes used by
+.Sq ARC_BUFC_METADATA
+ARC buffers in the
+.Sq arc_mru
+state that are eligible for eviction.  This type of ARC buffer is typically
+used by buffers storing disk-backed internal ZFS structures.
+.It Sy mru_ghost_evictable_data
+Total number of bytes that would have been used by
+.Sq ARC_BUFC_DATA
+ARC buffers in the
+.Sq arc_mru
+state that are eligible for eviction.  These buffers are in the
+.Sq arc_mru_ghost
+state.  This type of ARC buffer is typically
+used by buffers storing disk-backed user data.
+.It Sy mru_ghost_evictable_metadata
+Total number of bytes that would have been used by
+.Sq ARC_BUFC_METADATA
+ARC buffers in the
+.Sq arc_mru
+state that are eligible for eviction.  These buffers are in the
+.Sq arc_mru_ghost
+state.  This type of ARC buffer is typically
+used by buffers storing disk-backed internal ZFS structures.
+.It Sy mru_ghost_hits
+.It Sy mru_ghost_size
+Total number of bytes that would have been used by ARC buffers in the
+.Sq arc_mru
+state.
+.It Sy mru_hits
+.It Sy mru_size
+Total number of bytes used by ARC buffers in the
+.Sq arc_mru
+state.
+.El
+.Ss Prefetch
+.Bl -tag -width Ds
+.It Sy prefetch_data_hits
+.It Sy prefetch_data_misses
+.It Sy prefetch_metadata_hits
+.It Sy prefetch_metadata_misses
+.El
+.Sh INTERFACE STABILITY
+.Sy Evolving
+.Sh SEE ALSO
+.Xr proc 5 ,
+.Xr zfs-module-parameters 5 ,
+.Xr zpool 8
